@@ -42,14 +42,28 @@ foreach ($arrayKey as $element) {
 	if ($element == 'rcObjectId') continue;
 	
 	$baseElement = preg_replace('/'.$rcObjectId.'$/', '', $element);
-	$command=str_replace("$".$baseElement,$_POST[$element],$command);
 	debug("Replace: ".$baseElement." -> ".$_POST[$element]." | ".$command, 3, $rcDebugLevel);
 }
-$command=stripslashes($command);
 
 unset($outputValue);
 // Eseguo lo script
-$lastLine = exec($command, $outputValue, $retVal);
+$allowedCommands = [
+    'ls' => 'ls',
+    'date' => 'date',
+    'whoami' => 'whoami',
+    'df' => 'df',
+    'ps' => 'ps aux',
+    'free' => 'free -m',
+    'uptime' => 'uptime',
+    'uname' => 'uname -a'
+];
+
+if (isset($allowedCommands[$command])) {
+    $lastLine = exec(escapeshellcmd($allowedCommands[$command]), $outputValue, $retVal);
+} else {
+    $outputValue = array("Command not allowed");
+    $retVal = 1;
+}
 
 $result = "";
 switch ($outputType) {
